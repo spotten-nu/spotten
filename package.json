@@ -24,7 +24,10 @@
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject",
-        "prettier": "prettier --write ."
+        "eslint": "eslint -f unix --max-warnings 0 --fix .",
+        "eslint-check": "eslint -f unix --max-warnings 0 .",
+        "prettier": "prettier --write .",
+        "prettier-check": "prettier --check ."
     },
     "eslintConfig": {
         "extends": "react-app"

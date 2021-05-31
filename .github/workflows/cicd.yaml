@@ -1,0 +1,55 @@
+name: CI/CD
+on: push
+jobs:
+    build:
+        name: Lint, test and build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out code
+              uses: actions/checkout@v2
+              with:
+                  lfs: true
+            - name: Set up Node.js
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 14.x
+            - name: Install dependencies
+              run: npm install
+            - name: ESLint
+              run: npm run eslint-check
+            - name: Prettier
+              run: npm run prettier-check
+            - name: Test
+              run: npm test
+            - name: Build
+              run: npm run build
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v2
+              with:
+                  name: build
+                  path: build/
+
+    deploy:
+        name: Deploy
+        if: github.ref == 'refs/heads/master'
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download artifacts
+              uses: actions/download-artifact@v2
+              with:
+                  name: build
+                  path: build
+            - name: Deploy to GitHub Pages
+              run: |
+                  eval $(ssh-agent)
+                  echo "${{ secrets.DEPLOY_KEY }}" | ssh-add -
+                  cd build
+                  git config --global init.defaultBranch master
+                  git config --global user.email "noreply@spotten.nu"
+                  git config --global user.name "CI/CD"
+                  git init
+                  git add .
+                  git commit -m "Automatic deployment"
+                  git remote add origin git@github.com:spotten-nu/spotten-nu.github.io.git
+                  git push -f origin master
