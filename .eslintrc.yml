@@ -20,7 +20,7 @@ rules:
   # Disable some recommended rules:
   "@typescript-eslint/no-empty-function": off
   "@typescript-eslint/restrict-template-expressions": off
-  react/react-in-jsx-scope: "off"
+  react/react-in-jsx-scope: off
 
   # Enable additional rules:
   "@typescript-eslint/array-type":
