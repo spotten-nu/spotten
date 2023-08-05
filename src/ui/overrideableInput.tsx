@@ -44,7 +44,7 @@ const OverrideableInput: FC<Props> = ({ defaultValue, value, onChange, unit }) =
                         if (!(0 < newValue && newValue <= 360)) newValue = 360;
                         onChange?.(newValue);
                     } else {
-                        let newValue = Math.round(Number(e.target.value) / 0.1) * 0.1;
+                        const newValue = Math.round(Number(e.target.value) / 0.1) * 0.1;
                         onChange?.(newValue);
                     }
                 }}

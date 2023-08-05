@@ -1,5 +1,6 @@
 import blobStream from "blob-stream";
 import PDFDocument from "pdfkit";
+
 import { kt2mps, nm2m } from "../calculation/utils";
 import { Spot } from "./calculationAdapter";
 import { InputPanelState } from "./inputPanel";
@@ -209,12 +210,12 @@ class PdfGenerator {
         this.doc
             .text(time + "     ", this.width - w - 0.3, this.height - h + 0.7, { continued: true })
             .text("spotten.nu", { link: "https://spotten.nu/", continued: true })
-            .text("     Map: © ", { link: null as unknown as string, continued: true })
+            .text("     Map: © ", { link: null, continued: true })
             .text("OpenStreetMap", {
                 link: "https://www.openstreetmap.org/copyright",
                 continued: true,
             })
-            .text(" contributors", { link: null as unknown as string });
+            .text(" contributors", { link: null });
         this.footerWidth = w + 1;
         this.footerHeight = h;
     }

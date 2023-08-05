@@ -5,6 +5,7 @@ import "@fontsource/roboto/700.css";
 import { CssBaseline } from "@mui/material";
 import React from "react";
 import { createRoot } from "react-dom/client";
+
 import App from "./app";
 
 const root = document.getElementById("root");

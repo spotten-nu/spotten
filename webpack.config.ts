@@ -1,6 +1,6 @@
+import CopyPlugin from "copy-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import { Configuration } from "webpack";
-import CopyPlugin from "copy-webpack-plugin";
 
 const isProd = process.env.NODE_ENV === "production";
 

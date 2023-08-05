@@ -1,4 +1,5 @@
 import { FC, useEffect, useRef } from "react";
+
 import { deg2rad } from "../calculation";
 import { Dropzone } from "../dropzones";
 import { Spot } from "./calculationAdapter";
@@ -11,6 +12,7 @@ type Props = {
 
 const Preview: FC<Props> = ({ dropzone, spot }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const windowSize = useWindowSize();
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -22,7 +24,7 @@ const Preview: FC<Props> = ({ dropzone, spot }) => {
         canvas.height = height;
 
         draw(ctx, dropzone, spot).catch(err => console.error(`Preview.draw: ${err}`));
-    }, [useWindowSize(), spot]);
+    }, [dropzone, spot, windowSize]);
 
     return <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />;
 };

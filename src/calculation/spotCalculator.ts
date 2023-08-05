@@ -83,12 +83,11 @@ export class SpotCalculator {
 
     private getLandingDirection() {
         const windDirection = this.wind.at(0).direction;
-        if (!this.allowedLandingDirections) {
-            return windDirection;
-        }
-        return this.allowedLandingDirections
-            .map(ld => ({ ld, delta: Math.abs(normalizeAngleDiff(windDirection - ld)) }))
-            .sort((a, b) => a.delta - b.delta)[0]!.ld;
+        return (
+            this.allowedLandingDirections
+                ?.map(ld => ({ ld, delta: Math.abs(normalizeAngleDiff(windDirection - ld)) }))
+                ?.sort((a, b) => a.delta - b.delta)?.[0]?.ld ?? windDirection
+        );
     }
 
     private calculateFreeFall() {

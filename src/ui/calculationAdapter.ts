@@ -1,4 +1,4 @@
-import { Input, SpotCalculator, deg2rad, ft2m, kt2mps, m2nm, nm2m, rad2deg } from "../calculation";
+import { deg2rad, ft2m, Input, kt2mps, m2nm, nm2m, rad2deg, SpotCalculator } from "../calculation";
 import { InputPanelState } from "./inputPanel";
 
 // All code in the calculation directory uses metric units. This functions does the conversion.

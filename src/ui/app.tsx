@@ -4,8 +4,9 @@ import PrintIcon from "@mui/icons-material/Print";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Fab } from "@mui/material";
 import { FC, useState } from "react";
+
 import dropzones from "../dropzones";
-import { Spot, calculateSpot } from "./calculationAdapter";
+import { calculateSpot, Spot } from "./calculationAdapter";
 import InputPanel, { InputPanelState } from "./inputPanel";
 import { renderAsBlobURL } from "./pdfGenerator";
 import Preview from "./preview";
@@ -46,7 +47,7 @@ const App: FC = () => {
                 color="primary"
                 title="Print"
                 sx={{ position: "absolute", bottom: 170, right: 20 }}
-                onClick={() => print(input, spot).catch(console.error)}
+                onClick={() => void print(input, spot).catch(console.error)}
             >
                 <PrintIcon />
             </Fab>

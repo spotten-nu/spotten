@@ -1,5 +1,7 @@
 import { normalizeAngle, normalizeAngleDiff } from "./utils";
 
+/* TODO: Remove non-null assertions. */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 export class WindEstimator {
     private readonly winds: Wind[];
 
