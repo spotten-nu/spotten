@@ -6,6 +6,8 @@
     "license": "MIT",
     "scripts": {
         "build": "rm -rf dist && NODE_ENV=production webpack",
+        "prettier": "prettier --write .",
+        "prettier-check": "prettier --check .",
         "start": "webpack serve"
     },
     "dependencies": {
@@ -27,6 +29,7 @@
         "copy-webpack-plugin": "^11.0.0",
         "css-loader": "^6.8.1",
         "html-webpack-plugin": "^5.5.3",
+        "prettier": "^3.0.1",
         "style-loader": "^3.3.3",
         "ts-loader": "^9.4.4",
         "ts-node": "^10.9.1",

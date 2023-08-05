@@ -1,13 +1,4 @@
-import {
-    Input,
-    SpotCalculator,
-    deg2rad,
-    ft2m,
-    kt2mps,
-    m2nm,
-    nm2m,
-    rad2deg,
-} from "../calculation";
+import { Input, SpotCalculator, deg2rad, ft2m, kt2mps, m2nm, nm2m, rad2deg } from "../calculation";
 import { InputPanelState } from "./inputPanel";
 
 // All code in the calculation directory uses metric units. This functions does the conversion.
@@ -37,18 +28,14 @@ export function calculateSpot(input: InputPanelState): Spot {
         ],
         fixedTrack: deg2rad(input.fixedLineOfFlightDeg),
         fixedTransverseOffset: nm2m(input.fixedOffTrackNm),
-        allowedLandingDirections: input.dropzone.fixedLandingDirections?.map(
-            (x) => deg2rad(x)
-        ),
+        allowedLandingDirections: input.dropzone.fixedLandingDirections?.map(x => deg2rad(x)),
     };
 
     const metricOutput = new SpotCalculator(metricInput).calculate();
 
     return {
-        lineOfFlightDeg:
-            metricOutput.track === 0 ? 360 : rad2deg(metricOutput.track),
-        distanceNm:
-            input.fixedDistanceNm ?? m2nm(metricOutput.longitudinalOffset),
+        lineOfFlightDeg: metricOutput.track === 0 ? 360 : rad2deg(metricOutput.track),
+        distanceNm: input.fixedDistanceNm ?? m2nm(metricOutput.longitudinalOffset),
         offTrackNm: m2nm(metricOutput.transverseOffset),
         deplCircle: {
             xNm: m2nm(metricOutput.deplCircle.x),
@@ -66,9 +53,7 @@ export function calculateSpot(input: InputPanelState): Spot {
         },
         secondsBetweenGroups: metricOutput.timeBetweenGroups,
         landingDirection:
-            metricOutput.landingDirection === 0
-                ? 360
-                : rad2deg(metricOutput.landingDirection),
+            metricOutput.landingDirection === 0 ? 360 : rad2deg(metricOutput.landingDirection),
     };
 }
 

@@ -77,7 +77,10 @@ class PdfGenerator {
     private footerWidth = 0;
     private footerHeight = 0;
 
-    public constructor(private readonly data: Input, stream: NodeJS.WritableStream) {
+    public constructor(
+        private readonly data: Input,
+        stream: NodeJS.WritableStream,
+    ) {
         const margin = 6;
         this.doc = new PDFDocument({
             size: "a4",
