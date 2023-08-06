@@ -5,7 +5,7 @@ import { kt2mps, nm2m } from "../calculation/utils";
 import { Spot } from "./calculationAdapter";
 import { InputPanelState } from "./inputPanel";
 
-export async function renderAsBlobURL(input: InputPanelState, spot: Spot) {
+export async function renderAsBlob(input: InputPanelState, spot: Spot) {
     const mapResponse = await fetch(input.dropzone.mapPath);
     const imageData = await mapResponse.arrayBuffer();
 
@@ -59,8 +59,8 @@ export async function renderAsBlobURL(input: InputPanelState, spot: Spot) {
 
     const stream = blobStream();
     new PdfGenerator(pdfInput, stream);
-    return new Promise<string>(resolve =>
-        stream.on("finish", () => resolve(stream.toBlobURL("application/pdf"))),
+    return new Promise<Blob>(resolve =>
+        stream.on("finish", () => resolve(stream.toBlob("application/pdf"))),
     );
 }
 

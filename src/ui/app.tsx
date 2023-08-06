@@ -8,12 +8,13 @@ import { FC, useState } from "react";
 import dropzones from "../dropzones";
 import { calculateSpot, Spot } from "./calculationAdapter";
 import InputPanel, { InputPanelState } from "./inputPanel";
-import { renderAsBlobURL } from "./pdfGenerator";
+import { renderAsBlob } from "./pdfGenerator";
 import Preview from "./preview";
+import { useLocalStorage } from "./utils";
 
 const App: FC = () => {
+    const [input, setInput] = useLocalStorage("input", deserializeInput, serializeInput);
     const [inputVisible, setInputVisible] = useState(true);
-    const [input, setInput] = useState(restoreInput());
 
     const spot = calculateSpot(input);
 
@@ -25,10 +26,7 @@ const App: FC = () => {
                 <InputPanel
                     dropzones={dropzones}
                     value={input}
-                    onChange={x => {
-                        setInput(x);
-                        persistInput(x);
-                    }}
+                    onChange={x => setInput(x)}
                     onClose={() => setInputVisible(false)}
                     spot={spot}
                     sx={{ position: "absolute", top: 10, left: 10 }}
@@ -71,15 +69,15 @@ const App: FC = () => {
     );
 };
 
-type PersistedInput = Omit<InputPanelState, "dropzone"> & { dropzone: string };
+type SerializedInput = Omit<InputPanelState, "dropzone"> & { dropzone: string };
 
-function persistInput(input: InputPanelState) {
-    const jsonData: PersistedInput = { ...input, dropzone: input.dropzone.name };
-    localStorage.setItem("input", JSON.stringify(jsonData));
+function serializeInput(input: InputPanelState) {
+    const jsonData: SerializedInput = { ...input, dropzone: input.dropzone.name };
+    return JSON.stringify(jsonData);
 }
 
-function restoreInput(): InputPanelState {
-    const input = JSON.parse(localStorage.getItem("input") ?? "{}") as Partial<PersistedInput>;
+function deserializeInput(str: string | undefined): InputPanelState {
+    const input = JSON.parse(str ?? "{}") as Partial<SerializedInput>;
     return {
         dropzone: dropzones.find(dz => dz.name === input.dropzone) ?? dropzones[0],
         windFL100: input.windFL100 ?? { directionDeg: 360, speedKt: 0 },
@@ -93,9 +91,9 @@ function restoreInput(): InputPanelState {
 }
 
 async function print(input: InputPanelState, spot: Spot) {
-    const blobUrl = await renderAsBlobURL(input, spot);
+    const pdfBlob = await renderAsBlob(input, spot);
 
-    const wnd = window.open(blobUrl);
+    const wnd = window.open(URL.createObjectURL(pdfBlob));
     if (!wnd) return;
     wnd.onload = () => {
         wnd.focus();

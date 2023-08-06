@@ -3,7 +3,7 @@ import { FC, useEffect, useRef } from "react";
 import { deg2rad } from "../calculation";
 import { Dropzone } from "../dropzones";
 import { Spot } from "./calculationAdapter";
-import useWindowSize from "./useWindowSize";
+import { useWindowSize } from "./utils";
 
 type Props = {
     dropzone: Dropzone;
