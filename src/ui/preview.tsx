@@ -111,20 +111,16 @@ async function draw(ctx: CanvasRenderingContext2D, dropzone: Dropzone, spot: Spo
 
 // Cache the previous image to avoid flicker.
 let cachedUrl: string | undefined;
-let cachedImg: HTMLImageElement | undefined;
+let cachedBitmap: ImageBitmap | undefined;
 
 async function loadImage(url: string) {
-    if (url === cachedUrl && cachedImg !== undefined) return cachedImg;
+    if (url === cachedUrl && cachedBitmap !== undefined) return cachedBitmap;
     cachedUrl = url;
-    cachedImg = undefined;
+    cachedBitmap = undefined;
 
-    return new Promise<HTMLImageElement>((resolve, reject) => {
-        const img = new Image();
-        img.src = url;
-        img.onload = () => {
-            if (url === cachedUrl) cachedImg = img;
-            resolve(img);
-        };
-        img.onerror = () => reject(new Error("Cannot load map."));
-    });
+    const response = await fetch(url);
+    const bitmap = await createImageBitmap(await response.blob());
+    if (url === cachedUrl) cachedBitmap = bitmap;
+
+    return bitmap;
 }
