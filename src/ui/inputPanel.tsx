@@ -15,8 +15,8 @@ export type InputPanelState = {
     wind2000ft: Wind;
     windGround: Wind;
     fixedLineOfFlightDeg?: number;
-    fixedDistanceNm?: number;
     fixedOffTrackNm?: number;
+    fixedGreenLightNm?: number;
 };
 
 type Props = {
@@ -98,9 +98,9 @@ const InputPanel: FC<Props> = ({ dropzones, value, onChange, onClose, spot, sx }
             <InputLabel sx={{ marginY: 1 }}>Green light</InputLabel>
             <OverrideableInput
                 unit="nm"
-                defaultValue={spot?.distanceNm}
-                value={value.fixedDistanceNm}
-                onChange={nm => onChange?.({ ...value, fixedDistanceNm: nm })}
+                defaultValue={spot?.greenLightNm}
+                value={value.fixedGreenLightNm}
+                onChange={nm => onChange?.({ ...value, fixedGreenLightNm: nm })}
             />
         </Paper>
     );

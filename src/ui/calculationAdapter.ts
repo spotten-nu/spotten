@@ -35,8 +35,8 @@ export function calculateSpot(input: InputPanelState): Spot {
 
     return {
         lineOfFlightDeg: metricOutput.track === 0 ? 360 : rad2deg(metricOutput.track),
-        distanceNm: input.fixedDistanceNm ?? m2nm(metricOutput.longitudinalOffset),
         offTrackNm: m2nm(metricOutput.transverseOffset),
+        greenLightNm: input.fixedGreenLightNm ?? m2nm(metricOutput.longitudinalOffset),
         deplCircle: {
             xNm: m2nm(metricOutput.deplCircle.x),
             yNm: m2nm(metricOutput.deplCircle.y),
@@ -59,8 +59,8 @@ export function calculateSpot(input: InputPanelState): Spot {
 
 export type Spot = {
     lineOfFlightDeg: number;
-    distanceNm: number;
     offTrackNm: number;
+    greenLightNm: number;
     deplCircle: Circle;
     exitCircle: Circle;
     redLight: { bearingDeg: number; distanceNm: number };

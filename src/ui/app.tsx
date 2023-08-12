@@ -85,8 +85,8 @@ function deserializeInput(str: string | undefined): InputPanelState {
         wind2000ft: input.wind2000ft ?? { directionDeg: 360, speedKt: 0 },
         windGround: input.windGround ?? { directionDeg: 360, speedKt: 0 },
         fixedLineOfFlightDeg: input.fixedLineOfFlightDeg,
-        fixedDistanceNm: input.fixedDistanceNm,
         fixedOffTrackNm: input.fixedOffTrackNm,
+        fixedGreenLightNm: input.fixedGreenLightNm,
     };
 }
 

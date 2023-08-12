@@ -64,21 +64,20 @@ class PdfGenerator {
         const {
             lineOfFlightDeg,
             offTrackNm,
-            distanceNm,
+            greenLightNm,
             redLight: { bearingDeg: redBearing, distanceNm: redDistance },
         } = this.spot;
 
         // Line of flight and distance.
-        const distanceStr = (distanceNm > 0 ? "+" : "") + distanceNm.toFixed(1);
-        const line1 = `Green light ${angleStr(lineOfFlightDeg)}  ${distanceStr} NM`;
+        const greenLightStr = (greenLightNm > 0 ? "+" : "") + greenLightNm.toFixed(1);
+        const line1 = `Green light ${angleStr(lineOfFlightDeg)}  ${greenLightStr} NM`;
         this.doc.fontSize(6).text(line1, 0, 0);
         const line1Width = this.doc.widthOfString(line1);
 
         // Off track
         if (offTrackNm !== 0) {
             const side = offTrackNm > 0 ? "Right" : "Left";
-            const distance = Math.abs(offTrackNm).toFixed(1);
-            this.doc.text(`${side} off track  ${distance} NM`);
+            this.doc.text(`${side} off track  ${Math.abs(offTrackNm).toFixed(1)} NM`);
         }
 
         // Red light
@@ -237,7 +236,7 @@ class PdfGenerator {
 
         // Draw the circles
         this.doc
-            .lineWidth(0.006) // ~11 meters
+            .lineWidth(0.006) // 0.006 NM ~= 11 meters
             .circle(
                 this.spot.deplCircle.xNm,
                 this.spot.deplCircle.yNm,
@@ -260,10 +259,10 @@ class PdfGenerator {
             .moveTo(-0.05, 1.05)
             .lineTo(0, 1.1)
             .lineTo(0.05, 1.05)
-            .lineWidth(0.012) // ~22 meters
+            .lineWidth(0.012) // 0.012 NM ~= 22 meters
             .stroke()
-            .circle(0, this.spot.distanceNm, 0.024) // ~44 meters
-            .lineWidth(0.006) // ~11 meters
+            .circle(0, this.spot.greenLightNm, 0.024) // 0.024 NM ~= 44 meters
+            .lineWidth(0.006) // 0.006 NM ~= 11 meters
             .stroke();
 
         this.doc.restore();
