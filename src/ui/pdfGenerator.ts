@@ -4,61 +4,14 @@ import PDFDocument from "pdfkit";
 import { kt2mps, nm2m } from "../calculation/utils";
 import { Spot } from "./calculationAdapter";
 import { InputPanelState } from "./inputPanel";
+import { Wind } from "./windInput";
 
 export async function renderAsBlob(input: InputPanelState, spot: Spot) {
     const mapResponse = await fetch(input.dropzone.mapPath);
     const imageData = await mapResponse.arrayBuffer();
 
-    const pdfInput: Input = {
-        map: {
-            imageData,
-            metersPerPixel: input.dropzone.metersPerPixel,
-            width: input.dropzone.width,
-            height: input.dropzone.height,
-            dz: { x: input.dropzone.width / 2, y: input.dropzone.height / 2 },
-        },
-        winds: [
-            {
-                altitudeDescr: "FL100",
-                speed: input.windFL100.speedKt,
-                direction: input.windFL100.directionDeg,
-            },
-            {
-                altitudeDescr: "2000 ft",
-                speed: input.wind2000ft.speedKt,
-                direction: input.wind2000ft.directionDeg,
-            },
-            {
-                altitudeDescr: "Ground",
-                speed: input.windGround.speedKt,
-                direction: input.windGround.directionDeg,
-            },
-        ],
-        exitCircle: {
-            x: nm2m(spot.exitCircle.xNm),
-            y: nm2m(spot.exitCircle.yNm),
-            radius: nm2m(spot.exitCircle.radiusNm),
-        },
-        deplCircle: {
-            x: nm2m(spot.deplCircle.xNm),
-            y: nm2m(spot.deplCircle.yNm),
-            radius: nm2m(spot.deplCircle.radiusNm),
-        },
-        spot: {
-            heading: spot.lineOfFlightDeg,
-            longitudinalOffset: spot.distanceNm,
-            transverseOffset: spot.offTrackNm,
-        },
-        redLight: {
-            bearing: spot.redLight.bearingDeg,
-            distance: spot.redLight.distanceNm,
-        },
-        timeBetweenGroups: spot.secondsBetweenGroups,
-        time: new Date(),
-    };
-
     const stream = blobStream();
-    new PdfGenerator(pdfInput, stream);
+    new PdfGenerator(input, spot, imageData, stream);
     return new Promise<Blob>(resolve =>
         stream.on("finish", () => resolve(stream.toBlob("application/pdf"))),
     );
@@ -79,7 +32,9 @@ class PdfGenerator {
     private footerHeight = 0;
 
     public constructor(
-        private readonly data: Input,
+        private readonly input: InputPanelState,
+        private readonly spot: Spot,
+        private readonly imageData: ArrayBuffer,
         stream: NodeJS.WritableStream,
     ) {
         const margin = 6;
@@ -107,52 +62,53 @@ class PdfGenerator {
 
     private renderPilotInfo() {
         const {
-            spot: { heading, transverseOffset, longitudinalOffset },
-            redLight: red,
-        } = this.data;
+            lineOfFlightDeg,
+            offTrackNm,
+            distanceNm,
+            redLight: { bearingDeg: redBearing, distanceNm: redDistance },
+        } = this.spot;
 
-        const offsetStr = (longitudinalOffset > 0 ? "+" : "") + longitudinalOffset.toFixed(1);
-        const line1 = `Green light ${angleStr(heading)}  ${offsetStr} NM`;
+        // Line of flight and distance.
+        const distanceStr = (distanceNm > 0 ? "+" : "") + distanceNm.toFixed(1);
+        const line1 = `Green light ${angleStr(lineOfFlightDeg)}  ${distanceStr} NM`;
         this.doc.fontSize(6).text(line1, 0, 0);
-        this.pilotInfoWidth = this.doc.widthOfString(line1) + 0.5;
-        if (transverseOffset !== 0) {
-            const side = transverseOffset > 0 ? "Right" : "Left";
-            const distance = Math.abs(transverseOffset).toFixed(1);
+        const line1Width = this.doc.widthOfString(line1);
+
+        // Off track
+        if (offTrackNm !== 0) {
+            const side = offTrackNm > 0 ? "Right" : "Left";
+            const distance = Math.abs(offTrackNm).toFixed(1);
             this.doc.text(`${side} off track  ${distance} NM`);
         }
+
+        // Red light
         this.doc
             .fontSize(3)
-            .text(`Red light:  ${angleStr(red.bearing)}  ${red.distance.toFixed(1)} NM`);
+            .text(`Red light:  ${angleStr(redBearing)}  ${redDistance.toFixed(1)} NM`);
+
+        this.pilotInfoWidth = line1Width + 0.5;
         this.pilotInfoHeight = this.doc.y;
     }
 
     private renderWinds() {
-        this.doc.fontSize(3);
-        const winds = [...this.data.winds].reverse();
-        this.windInfoHeight = -1.5;
-        this.windInfoWidth = 21;
         this.doc.save();
-        this.doc.translate(0, this.height);
-        for (const wind of winds) {
-            this.windInfoHeight += 30;
-            this.doc.translate(0, -30);
-            this.renderOneWind(wind);
-        }
+        this.doc.fontSize(3);
+        this.doc.translate(0, this.height - 90);
+        this.renderOneWind(this.input.windFL100, "FL100");
+        this.doc.translate(0, 30);
+        this.renderOneWind(this.input.wind2000ft, "2000 ft");
+        this.doc.translate(0, 30);
+        this.renderOneWind(this.input.windGround, "Ground");
         this.doc.restore();
+
+        this.windInfoHeight = 88.5;
+        this.windInfoWidth = 21;
     }
 
-    private renderOneWind({
-        altitudeDescr,
-        speed,
-        direction,
-    }: {
-        altitudeDescr: string;
-        speed: number;
-        direction: number;
-    }) {
+    private renderOneWind({ speedKt, directionDeg }: Wind, altitudeDescr: string) {
         this.doc.fontSize(3);
         this.doc.text(altitudeDescr, 0, 2.5, { width: 20, align: "center" });
-        this.doc.text(`${direction.toFixed(0)}° / ${speed.toFixed(0)} kt`, {
+        this.doc.text(`${directionDeg.toFixed(0)}° / ${speedKt.toFixed(0)} kt`, {
             width: 20,
             align: "center",
         });
@@ -166,13 +122,13 @@ class PdfGenerator {
         }
 
         // Numeric wind speed
-        const mps = kt2mps(speed);
+        const mps = kt2mps(speedKt);
         this.doc.fontSize(4).text(mps.toFixed(0), -5, -1.5, { width: 10, align: "center" });
 
         // Wind arrow
         if (mps >= 0.5) {
             this.doc
-                .rotate(direction)
+                .rotate(directionDeg)
                 .moveTo(0, -9.5)
                 .lineTo(0, -3.5)
                 .lineWidth(1)
@@ -188,7 +144,7 @@ class PdfGenerator {
 
     private renderJumperInfo() {
         this.doc.fontSize(5);
-        const text = `${this.data.timeBetweenGroups} seconds between groups`;
+        const text = `${this.spot.secondsBetweenGroups} seconds between groups`;
         this.jumperInfoWidth = this.doc.widthOfString(text) + 1;
         this.jumperInfoHeight = this.doc.heightOfString(text);
 
@@ -202,7 +158,7 @@ class PdfGenerator {
             day: "numeric",
             hour: "numeric",
             minute: "numeric",
-        }).format(this.data.time);
+        }).format(new Date());
         const fullText = `${time}     spotten.nu     Map: © OpenStreetMap contributors`;
         this.doc.fontSize(3);
         const w = this.doc.widthOfString(fullText);
@@ -225,14 +181,15 @@ class PdfGenerator {
         this.traceOutline();
         this.doc.clip();
 
-        const { imageData, metersPerPixel, width, height, dz } = this.data.map;
+        const map = this.input.dropzone;
+        const dz = { x: map.width / 2, y: map.height / 2 }; // DZ must be in the center of the map.
         this.doc
             .save()
             .translate(this.width / 2, this.height / 2)
             .scale(1000 * this.mapScale)
-            .image(imageData, -dz.x * metersPerPixel, -dz.y * metersPerPixel, {
-                width: width * metersPerPixel,
-                height: height * metersPerPixel,
+            .image(this.imageData, -dz.x * map.metersPerPixel, -dz.y * map.metersPerPixel, {
+                width: map.width * map.metersPerPixel,
+                height: map.height * map.metersPerPixel,
             })
             .restore();
         this.renderSpot();
@@ -260,42 +217,53 @@ class PdfGenerator {
     }
 
     private renderSpot() {
-        // Switch unit from mm to real-world meters.
+        // Switch unit from mm to m, move origo to the DZ and flip the Y axis to point up.
         this.doc
             .save()
             .translate(this.width / 2, this.height / 2)
             .scale(1000 * this.mapScale, -1000 * this.mapScale);
 
-        // Draw the circles
-        this.doc
-            .lineWidth(10)
-            .circle(this.data.deplCircle.x, this.data.deplCircle.y, this.data.deplCircle.radius)
-            .stroke("#a0a0a0")
-            .circle(this.data.exitCircle.x, this.data.exitCircle.y, this.data.exitCircle.radius)
-            .stroke("black");
-
         // Draw the DZ cross
         this.doc
-            .moveTo(-25, -25)
-            .lineTo(25, 25)
-            .moveTo(25, -25)
-            .lineTo(-25, 25)
-            .lineWidth(15)
+            .moveTo(-24, -24)
+            .lineTo(24, 24)
+            .moveTo(24, -24)
+            .lineTo(-24, 24)
+            .lineWidth(16)
             .stroke();
+
+        // Switch unit from m to NM.
+        this.doc.scale(1852, 1852);
+
+        // Draw the circles
+        this.doc
+            .lineWidth(0.006) // ~11 meters
+            .circle(
+                this.spot.deplCircle.xNm,
+                this.spot.deplCircle.yNm,
+                this.spot.deplCircle.radiusNm,
+            )
+            .stroke("#a0a0a0")
+            .circle(
+                this.spot.exitCircle.xNm,
+                this.spot.exitCircle.yNm,
+                this.spot.exitCircle.radiusNm,
+            )
+            .stroke("black");
 
         // Draw the arrow and green light circle
         this.doc
-            .rotate(-this.data.spot.heading)
-            .translate(nm2m(this.data.spot.transverseOffset), 0)
-            .moveTo(0, -2000)
-            .lineTo(0, 2000)
-            .moveTo(0 - 100, 2000 - 100)
-            .lineTo(0, 2000)
-            .lineTo(0 + 100, 2000 - 100)
-            .lineWidth(25)
+            .rotate(-this.spot.lineOfFlightDeg)
+            .translate(this.spot.offTrackNm, 0)
+            .moveTo(0, -1.1)
+            .lineTo(0, 1.1)
+            .moveTo(-0.05, 1.05)
+            .lineTo(0, 1.1)
+            .lineTo(0.05, 1.05)
+            .lineWidth(0.012) // ~22 meters
             .stroke()
-            .circle(0, nm2m(this.data.spot.longitudinalOffset), 40)
-            .lineWidth(10)
+            .circle(0, this.spot.distanceNm, 0.024) // ~44 meters
+            .lineWidth(0.006) // ~11 meters
             .stroke();
 
         this.doc.restore();
@@ -357,37 +325,3 @@ function angleStr(deg: number) {
     if (deg <= 0) deg += 360; // North is "360" - not "000".
     return `00${deg}`.slice(-3) + "°";
 }
-
-type Input = {
-    map: {
-        imageData: ArrayBuffer;
-        metersPerPixel: number;
-        width: number;
-        height: number;
-        dz: { x: number; y: number };
-    };
-    winds: Array<{
-        altitudeDescr: string;
-        speed: number;
-        direction: number;
-    }>;
-    exitCircle: Circle;
-    deplCircle: Circle;
-    spot: {
-        heading: number;
-        longitudinalOffset: number;
-        transverseOffset: number;
-    };
-    redLight: {
-        bearing: number;
-        distance: number;
-    };
-    timeBetweenGroups: number;
-    time: Date;
-};
-
-type Circle = {
-    x: number;
-    y: number;
-    radius: number;
-};
