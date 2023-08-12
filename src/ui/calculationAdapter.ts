@@ -26,17 +26,17 @@ export function calculateSpot(input: InputPanelState): Spot {
                 direction: deg2rad(input.windGround.directionDeg),
             },
         ],
-        fixedTrack: deg2rad(input.fixedLineOfFlightDeg),
-        fixedTransverseOffset: nm2m(input.fixedOffTrackNm),
-        allowedLandingDirections: input.dropzone.fixedLandingDirections?.map(x => deg2rad(x)),
+        fixedLineOfFlight: deg2rad(input.fixedLineOfFlightDeg),
+        fixedOffTrack: nm2m(input.fixedOffTrackNm),
+        fixedLandingDirections: input.dropzone.fixedLandingDirections?.map(x => deg2rad(x)),
     };
 
     const metricOutput = new SpotCalculator(metricInput).calculate();
 
     return {
-        lineOfFlightDeg: metricOutput.track === 0 ? 360 : rad2deg(metricOutput.track),
-        offTrackNm: m2nm(metricOutput.transverseOffset),
-        greenLightNm: input.fixedGreenLightNm ?? m2nm(metricOutput.longitudinalOffset),
+        lineOfFlightDeg: metricOutput.lineOfFlight === 0 ? 360 : rad2deg(metricOutput.lineOfFlight),
+        offTrackNm: m2nm(metricOutput.offTrack),
+        greenLightNm: input.fixedGreenLightNm ?? m2nm(metricOutput.greenLight),
         deplCircle: {
             xNm: m2nm(metricOutput.deplCircle.x),
             yNm: m2nm(metricOutput.deplCircle.y),
