@@ -30,9 +30,9 @@ jobs:
           path: dist
 
   deploy:
-    runs-on: ubuntu-latest
-    needs: build
     if: github.repository == 'spotten-nu/spotten' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v3

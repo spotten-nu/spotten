@@ -3,7 +3,7 @@ import { FC, useEffect, useRef } from "react";
 import { deg2rad } from "../calculation";
 import { Dropzone } from "../dropzones";
 import { Spot } from "./calculationAdapter";
-import useWindowSize from "./useWindowSize";
+import { useWindowSize } from "./utils";
 
 type Props = {
     dropzone: Dropzone;
@@ -93,7 +93,7 @@ async function draw(ctx: CanvasRenderingContext2D, dropzone: Dropzone, spot: Spo
     ctx.rotate(deg2rad(-spot.lineOfFlightDeg));
     ctx.translate(spot.offTrackNm, 0);
     ctx.beginPath();
-    ctx.moveTo(0, Math.min(-1, spot.distanceNm - 0.1));
+    ctx.moveTo(0, Math.min(-1, spot.greenLightNm - 0.1));
     ctx.lineTo(0, 1.2);
     ctx.moveTo(-0.04, 1.16);
     ctx.lineTo(0, 1.2);
@@ -102,7 +102,7 @@ async function draw(ctx: CanvasRenderingContext2D, dropzone: Dropzone, spot: Spo
 
     // Green light circle
     ctx.beginPath();
-    ctx.arc(0, spot.distanceNm, 0.02, 0, 2 * Math.PI);
+    ctx.arc(0, spot.greenLightNm, 0.02, 0, 2 * Math.PI);
     ctx.lineWidth = 0.003;
     ctx.stroke();
 
