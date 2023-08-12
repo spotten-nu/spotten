@@ -1,3 +1,5 @@
+![Build status](https://github.com/spotten-nu/spotten/actions/workflows/build.yaml/badge.svg)
+
 # Spotten
 
 Skydiving exit-point calculator. Hosted on [spotten.nu](https://spotten.nu).
