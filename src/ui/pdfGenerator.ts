@@ -122,19 +122,21 @@ class PdfGenerator {
 
         // Numeric wind speed
         const mps = kt2mps(speedKt);
-        this.doc.fontSize(4).text(mps.toFixed(0), -5, -1.5, { width: 10, align: "center" });
+        this.doc
+            .fontSize(3)
+            .text(`${mps.toFixed(0)} m/s`, -6, -1.5, { width: 12, align: "center" });
 
         // Wind arrow
         if (mps >= 0.5) {
             this.doc
                 .rotate(directionDeg)
                 .moveTo(0, -9.5)
-                .lineTo(0, -3.5)
+                .lineTo(0, -7.4)
                 .lineWidth(1)
                 .stroke("black")
-                .moveTo(0, -2.5)
-                .lineTo(-1.6, -5)
-                .lineTo(1.6, -5)
+                .moveTo(0, -5)
+                .lineTo(-1.6, -7.5)
+                .lineTo(1.6, -7.5)
                 .closePath()
                 .fill("black");
         }
