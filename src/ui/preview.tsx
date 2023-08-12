@@ -59,7 +59,7 @@ async function draw(ctx: CanvasRenderingContext2D, dropzone: Dropzone, spot: Spo
     ctx.fillText(`${spot.secondsBetweenGroups.toFixed(0)} s between groups`, 10, height - 38);
     ctx.fillText(`Landing direction ${spot.landingDirection.toFixed(0)}°`, 10, height - 14);
 
-    // Switch coordinate system to 1 = 1 m, center at DZ, positive Y up.
+    // Switch unit from mm to real-world meters, center origo, and flip the Y axis to point up.
     ctx.translate(width / 2, height / 2);
     ctx.scale(scale / dropzone.metersPerPixel, -scale / dropzone.metersPerPixel);
 
@@ -79,7 +79,7 @@ async function draw(ctx: CanvasRenderingContext2D, dropzone: Dropzone, spot: Spo
     // Deployment circle
     ctx.beginPath();
     ctx.arc(spot.deplCircle.xNm, spot.deplCircle.yNm, spot.deplCircle.radiusNm, 0, 2 * Math.PI);
-    ctx.lineWidth = 0.006;
+    ctx.lineWidth = 0.006; // 0.006 NM ~= 11 meters
     ctx.strokeStyle = "rgb(160, 160, 160)";
     ctx.stroke();
 
@@ -103,7 +103,7 @@ async function draw(ctx: CanvasRenderingContext2D, dropzone: Dropzone, spot: Spo
     // Green light circle
     ctx.beginPath();
     ctx.arc(0, spot.greenLightNm, 0.02, 0, 2 * Math.PI);
-    ctx.lineWidth = 0.003;
+    ctx.lineWidth = 0.003; // 0.003 NM ~= 5.6 meters
     ctx.stroke();
 
     ctx.restore();
