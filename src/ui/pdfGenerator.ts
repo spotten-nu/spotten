@@ -105,6 +105,7 @@ class PdfGenerator {
     }
 
     private renderOneWind({ speedKt, directionDeg }: Wind, altitudeDescr: string) {
+        // Altitude description and wind speed in knots.
         this.doc.fontSize(3);
         this.doc.text(altitudeDescr, 0, 2.5, { width: 20, align: "center" });
         this.doc.text(`${directionDeg.toFixed(0)}° / ${speedKt.toFixed(0)} kt`, {
@@ -120,21 +121,21 @@ class PdfGenerator {
             this.doc.rotate(45).moveTo(0, 10).lineTo(0, 8.5).stroke();
         }
 
-        // Numeric wind speed
+        // Metric wind speed inside the circle
         const mps = kt2mps(speedKt);
-        this.doc.fontSize(4).text(mps.toFixed(0), -5, -1.5, { width: 10, align: "center" });
+        this.doc.text(`${mps.toFixed(0)} m/s`, -6, -1.5, { width: 12, align: "center" });
 
         // Wind arrow
         if (mps >= 0.5) {
             this.doc
                 .rotate(directionDeg)
                 .moveTo(0, -9.5)
-                .lineTo(0, -3.5)
+                .lineTo(0, -7.4)
                 .lineWidth(1)
                 .stroke("black")
-                .moveTo(0, -2.5)
-                .lineTo(-1.6, -5)
-                .lineTo(1.6, -5)
+                .moveTo(0, -5)
+                .lineTo(-1.6, -7.5)
+                .lineTo(1.6, -7.5)
                 .closePath()
                 .fill("black");
         }
