@@ -119,33 +119,28 @@ export class SpotCalculator {
     }
 
     private calculateSpot(circle: Circle) {
+        const windDirection = this.wind.at(this.config.exitAltitude).direction;
         let track = this.fixedTrack;
         let offTrack = this.fixedOffTrack;
+
         if (offTrack === undefined) {
-            // TODO: Should we use the wind at deployment altitude instead?
-            const windDirection = this.wind.at(this.config.exitAltitude).direction;
             track ??= normalizeAngle(deg2rad(5) * Math.round(windDirection / deg2rad(5)));
 
-            // Find the transverseOffset that puts the track straight through the circle's center.
+            // Find the offTrack that puts the track straight through the circle's center.
             offTrack = circle.x * Math.cos(track) - circle.y * Math.sin(track);
             offTrack = nm2m(0.1) * Math.round(offTrack / nm2m(0.1));
         } else if (track === undefined) {
-            // Find the direction that puts the track straight through the circle's center.
-            track =
-                Math.atan2(circle.x, circle.y) -
-                Math.asin(offTrack / Math.sqrt(circle.x ** 2 + circle.y ** 2));
-            track = normalizeAngle(deg2rad(5) * Math.round(track / deg2rad(5)));
+            // TODO: Find the track that maximizes the flight time inside the circle.
+            track = windDirection;
         }
 
-        // Find the longitudinalOffset that puts the exit point right at the edge of the circle.
+        // Find the greenLight distance that puts the exit point right at the edge of the circle.
+        // The forward throw and the 10 seconds delay are added later.
         const dx = circle.x - offTrack * Math.cos(track);
         const dy = circle.y + offTrack * Math.sin(track);
         const midJumpRun = dx * Math.sin(track) + dy * Math.cos(track);
         const halfJumpRun = Math.sqrt(midJumpRun ** 2 - dx ** 2 - dy ** 2 + circle.radius ** 2);
-        const greenLight = midJumpRun - halfJumpRun;
-        if (isNaN(greenLight)) {
-            throw new Error("The jump run does not intersect the exit circle");
-        }
+        const greenLight = midJumpRun - (Number.isFinite(halfJumpRun) ? halfJumpRun : 0);
 
         return { track, greenLight, offTrack, jumpRunLength: 2 * halfJumpRun };
     }
