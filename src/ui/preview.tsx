@@ -39,8 +39,8 @@ async function draw(ctx: CanvasRenderingContext2D, dropzone: Dropzone, spot: Spo
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, width, height);
 
-    // Choose a scale factor half-way between "contain" and "cover".
-    const scale = (width / map.width + height / map.height) / 2;
+    // Choose a scale factor that fits the entire map on the canvas.
+    const scale = Math.min(width / map.width, height / map.height);
     ctx.drawImage(
         map,
         width / 2 - (map.width / 2) * scale,
