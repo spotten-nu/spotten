@@ -26,6 +26,4 @@ Skydiving exit-point calculator. Hosted on [spotten.nu](https://spotten.nu).
 Changes are deployed automatically using GitHub Actions when a change is pushed to `master`. See
 [build.yaml](.github/workflows/build.yaml) for details.
 
-The site is hosted on GitHub Pages in a
-[separate repository](https://github.com/spotten-nu/spotten-nu.github.io). There is no server-side
-code - just static contents.
+The site is hosted on GitHub Pages . There is no server-side code - just static contents.
