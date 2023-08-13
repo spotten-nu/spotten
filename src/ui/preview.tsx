@@ -32,10 +32,13 @@ const Preview: FC<Props> = ({ dropzone, spot }) => {
 export default Preview;
 
 async function draw(ctx: CanvasRenderingContext2D, dropzone: Dropzone, spot: Spot) {
+    const map = await loadImage(dropzone.mapPath);
+
     ctx.save();
     const { width, height } = ctx.canvas;
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, width, height);
 
-    const map = await loadImage(dropzone.mapPath);
     // Choose a scale factor half-way between "contain" and "cover".
     const scale = (width / map.width + height / map.height) / 2;
     ctx.drawImage(
@@ -47,7 +50,6 @@ async function draw(ctx: CanvasRenderingContext2D, dropzone: Dropzone, spot: Spo
     );
 
     // Bottom left info
-    ctx.fillStyle = "white";
     ctx.fillRect(0, height - 64, 210, 64);
     ctx.moveTo(0, height - 64);
     ctx.lineTo(210, height - 64);
