@@ -23,31 +23,18 @@ jobs:
       - name: Build
         run: npm run build
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-pages-artifact@v2
         with:
-          name: dist
           path: dist
 
   deploy:
     if: github.repository == 'spotten-nu/spotten' && github.ref == 'refs/heads/master'
     needs: build
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     runs-on: ubuntu-latest
     steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: dist
-          path: dist
       - name: Deploy to GitHub Pages
-        run: |
-          eval $(ssh-agent)
-          echo "${{ secrets.DEPLOY_KEY }}" | ssh-add -
-          cd dist
-          git config --global init.defaultBranch master
-          git config --global user.email "noreply@spotten.nu"
-          git config --global user.name "CI/CD"
-          git init
-          git add .
-          git commit -m "Automatic deployment"
-          git remote add origin git@github.com:spotten-nu/spotten-nu.github.io.git
-          git push -f origin master
+        uses: actions/deploy-pages@v2
