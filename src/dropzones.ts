@@ -39,6 +39,13 @@ const dropzones: [Dropzone, ...Dropzone[]] = [
         height: 1000,
         metersPerPixel: 5,
     },
+    {
+        name: "Lahti-Vesivehmaa",
+        mapPath: "/maps/lahti-vesivehmaa.png",
+        width: 1436,
+        height: 1000,
+        metersPerPixel: 5,
+    },
 ];
 
 export default dropzones;
