@@ -23,6 +23,7 @@ const WindInput: FC<Props> = ({ value, onChange }) => {
                 label="Direction"
                 variant="outlined"
                 size="small"
+                sx={{ width: 100 }}
                 inputProps={{ min: 0, max: 360, step: 5 }}
                 InputProps={{
                     endAdornment: <InputAdornment position="end">°</InputAdornment>,
@@ -42,7 +43,7 @@ const WindInput: FC<Props> = ({ value, onChange }) => {
                 label="Speed"
                 variant="outlined"
                 size="small"
-                sx={{ marginLeft: 1 }}
+                sx={{ marginLeft: 1, width: 100 }}
                 inputProps={{ min: 0, max: 99, step: 1 }}
                 InputProps={{
                     endAdornment: <InputAdornment position="end">kt</InputAdornment>,
