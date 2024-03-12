@@ -88,7 +88,7 @@ export class SpotCalculator {
         return (
             this.fixedLandingDirections
                 ?.map(ld => ({ ld, delta: Math.abs(normalizeAngleDiff(windDirection - ld)) }))
-                ?.sort((a, b) => a.delta - b.delta)?.[0]?.ld ?? windDirection
+                .sort((a, b) => a.delta - b.delta)[0]?.ld ?? windDirection
         );
     }
 
