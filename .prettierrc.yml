@@ -1,0 +1,10 @@
+arrowParens: avoid
+printWidth: 100
+quoteProps: consistent
+tabWidth: 4
+trailingComma: all
+
+overrides:
+  - files: ["*.md", "*.yml", "*.yaml"]
+    options:
+      tabWidth: 2

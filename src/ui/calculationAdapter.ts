@@ -1,13 +1,4 @@
-import {
-    Input,
-    SpotCalculator,
-    deg2rad,
-    ft2m,
-    kt2mps,
-    m2nm,
-    nm2m,
-    rad2deg,
-} from "../calculation";
+import { deg2rad, ft2m, Input, kt2mps, m2nm, nm2m, rad2deg, SpotCalculator } from "../calculation";
 import { InputPanelState } from "./inputPanel";
 
 // All code in the calculation directory uses metric units. This functions does the conversion.
@@ -35,21 +26,17 @@ export function calculateSpot(input: InputPanelState): Spot {
                 direction: deg2rad(input.windGround.directionDeg),
             },
         ],
-        fixedTrack: deg2rad(input.fixedLineOfFlightDeg),
-        fixedTransverseOffset: nm2m(input.fixedOffTrackNm),
-        allowedLandingDirections: input.dropzone.fixedLandingDirections?.map(
-            (x) => deg2rad(x)
-        ),
+        fixedLineOfFlight: deg2rad(input.fixedLineOfFlightDeg),
+        fixedOffTrack: nm2m(input.fixedOffTrackNm),
+        fixedLandingDirections: input.dropzone.fixedLandingDirections?.map(x => deg2rad(x)),
     };
 
     const metricOutput = new SpotCalculator(metricInput).calculate();
 
     return {
-        lineOfFlightDeg:
-            metricOutput.track === 0 ? 360 : rad2deg(metricOutput.track),
-        distanceNm:
-            input.fixedDistanceNm ?? m2nm(metricOutput.longitudinalOffset),
-        offTrackNm: m2nm(metricOutput.transverseOffset),
+        lineOfFlightDeg: metricOutput.lineOfFlight === 0 ? 360 : rad2deg(metricOutput.lineOfFlight),
+        offTrackNm: m2nm(metricOutput.offTrack),
+        greenLightNm: input.fixedGreenLightNm ?? m2nm(metricOutput.greenLight),
         deplCircle: {
             xNm: m2nm(metricOutput.deplCircle.x),
             yNm: m2nm(metricOutput.deplCircle.y),
@@ -66,16 +53,14 @@ export function calculateSpot(input: InputPanelState): Spot {
         },
         secondsBetweenGroups: metricOutput.timeBetweenGroups,
         landingDirection:
-            metricOutput.landingDirection === 0
-                ? 360
-                : rad2deg(metricOutput.landingDirection),
+            metricOutput.landingDirection === 0 ? 360 : rad2deg(metricOutput.landingDirection),
     };
 }
 
 export type Spot = {
     lineOfFlightDeg: number;
-    distanceNm: number;
     offTrackNm: number;
+    greenLightNm: number;
     deplCircle: Circle;
     exitCircle: Circle;
     redLight: { bearingDeg: number; distanceNm: number };

@@ -1,7 +1,8 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { IconButton, InputLabel, MenuItem, Paper, Select } from "@mui/material";
-import { SxProps, Theme, css, styled } from "@mui/material/styles";
+import { css, styled, SxProps, Theme } from "@mui/material/styles";
 import { FC } from "react";
+
 import { Dropzone } from "../dropzones";
 import { Spot } from "./calculationAdapter";
 import OverrideableInput from "./overrideableInput";
@@ -14,8 +15,8 @@ export type InputPanelState = {
     wind2000ft: Wind;
     windGround: Wind;
     fixedLineOfFlightDeg?: number;
-    fixedDistanceNm?: number;
     fixedOffTrackNm?: number;
+    fixedGreenLightNm?: number;
 };
 
 type Props = {
@@ -44,13 +45,13 @@ const InputPanel: FC<Props> = ({ dropzones, value, onChange, onClose, spot, sx }
             <Select
                 required
                 size="small"
-                value={value.dropzone?.name ?? dropzones?.[0]?.name ?? ""}
+                value={value.dropzone.name}
                 onChange={x => {
-                    const newDz = dropzones?.find(dz => dz.name === x.target.value);
+                    const newDz = dropzones.find(dz => dz.name === x.target.value);
                     if (newDz) onChange?.({ ...value, dropzone: newDz });
                 }}
             >
-                {dropzones?.map(dz => (
+                {dropzones.map(dz => (
                     <MenuItem key={dz.name} value={dz.name}>
                         {dz.name}
                     </MenuItem>
@@ -87,19 +88,19 @@ const InputPanel: FC<Props> = ({ dropzones, value, onChange, onClose, spot, sx }
                 value={value.fixedLineOfFlightDeg}
                 onChange={deg => onChange?.({ ...value, fixedLineOfFlightDeg: deg })}
             />
-            <InputLabel sx={{ marginY: 1 }}>Green light</InputLabel>
-            <OverrideableInput
-                unit="nm"
-                defaultValue={spot?.distanceNm}
-                value={value.fixedDistanceNm}
-                onChange={nm => onChange?.({ ...value, fixedDistanceNm: nm })}
-            />
             <InputLabel sx={{ marginY: 1 }}>Off track</InputLabel>
             <OverrideableInput
                 unit="nm"
                 defaultValue={spot?.offTrackNm}
                 value={value.fixedOffTrackNm}
                 onChange={nm => onChange?.({ ...value, fixedOffTrackNm: nm })}
+            />
+            <InputLabel sx={{ marginY: 1 }}>Green light</InputLabel>
+            <OverrideableInput
+                unit="nm"
+                defaultValue={spot?.greenLightNm}
+                value={value.fixedGreenLightNm}
+                onChange={nm => onChange?.({ ...value, fixedGreenLightNm: nm })}
             />
         </Paper>
     );

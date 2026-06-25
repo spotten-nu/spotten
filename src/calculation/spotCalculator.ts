@@ -5,21 +5,23 @@ import { Wind, WindEstimator } from "./windEstimator";
 //  * Units: All values are in meters, seconds, m/s and radians.
 //  * The origin is at the DZ and coordinates increase to the northeast.
 //  * Angles increase clockwise from 12 o'clock.
-//  * Wind angles are opposite to other angles and refer to where the wind is *coming from*.
+//  * Wind angles are antiparallel to other angles and refer to where the wind is *coming from*.
+//  * "Off track" is positive to the right, negative to the left.
 //  * Deployment altitude is the altitude where the canopy is fully deployed, not the SBF def.
+//  * "Track" and "Line of flight" are used interchangeably and refer to the aircraft's COG.
 
 export class SpotCalculator {
     private readonly wind: WindEstimator;
     private readonly config: Config;
     private readonly fixedTrack: number | undefined;
-    private readonly fixedTransverseOffset: number | undefined;
-    private readonly allowedLandingDirections: number[] | undefined;
+    private readonly fixedOffTrack: number | undefined;
+    private readonly fixedLandingDirections: number[] | undefined;
 
     public constructor(input: Input) {
         this.wind = new WindEstimator(input.winds);
-        this.fixedTrack = input.fixedTrack;
-        this.fixedTransverseOffset = input.fixedTransverseOffset;
-        this.allowedLandingDirections = input.allowedLandingDirections;
+        this.fixedTrack = input.fixedLineOfFlight;
+        this.fixedOffTrack = input.fixedOffTrack;
+        this.fixedLandingDirections = input.fixedLandingDirections;
         this.config = { ...defaultConfig, ...input.config };
     }
 
@@ -34,22 +36,22 @@ export class SpotCalculator {
 
         exitCircle.x -= throwDistance * Math.sin(spot.track);
         exitCircle.y -= throwDistance * Math.cos(spot.track);
-        spot.longitudinalOffset -= throwDistance;
+        spot.greenLight -= throwDistance;
 
         const exitWind = this.wind.at(this.config.exitAltitude);
         const sog = getSpeedOverGround(spot.track, this.config.jumpRunTAS, exitWind).speed;
 
-        spot.longitudinalOffset -= this.config.greenLightTime * sog;
-        spot.longitudinalOffset = nm2m(0.1) * Math.round(spot.longitudinalOffset / nm2m(0.1));
+        spot.greenLight -= this.config.greenLightTime * sog;
+        spot.greenLight = nm2m(0.1) * Math.round(spot.greenLight / nm2m(0.1));
 
         return {
-            track: spot.track,
-            longitudinalOffset: spot.longitudinalOffset,
-            transverseOffset: spot.transverseOffset,
+            lineOfFlight: spot.track,
+            greenLight: spot.greenLight,
+            offTrack: spot.offTrack,
             landingDirection,
             deplCircle,
             exitCircle,
-            redLight: this.calculateRedLight(spot.track, spot.longitudinalOffset, sog),
+            redLight: this.calculateRedLight(spot.track, spot.greenLight, sog),
             timeBetweenGroups: this.getTimeBetweenGroups(spot.track),
             jumpRunDuration: sog > 0 ? spot.jumpRunLength / sog : 0,
         };
@@ -83,12 +85,11 @@ export class SpotCalculator {
 
     private getLandingDirection() {
         const windDirection = this.wind.at(0).direction;
-        if (!this.allowedLandingDirections) {
-            return windDirection;
-        }
-        return this.allowedLandingDirections
-            .map(ld => ({ ld, delta: Math.abs(normalizeAngleDiff(windDirection - ld)) }))
-            .sort((a, b) => a.delta - b.delta)[0]!.ld;
+        return (
+            this.fixedLandingDirections
+                ?.map(ld => ({ ld, delta: Math.abs(normalizeAngleDiff(windDirection - ld)) }))
+                .sort((a, b) => a.delta - b.delta)[0]?.ld ?? windDirection
+        );
     }
 
     private calculateFreeFall() {
@@ -118,43 +119,37 @@ export class SpotCalculator {
     }
 
     private calculateSpot(circle: Circle) {
+        const windDirection = this.wind.at(this.config.exitAltitude).direction;
         let track = this.fixedTrack;
-        let transverseOffset = this.fixedTransverseOffset;
-        if (transverseOffset === undefined) {
-            // TODO: Should we use the wind at deployment altitude instead?
-            const windDirection = this.wind.at(this.config.exitAltitude).direction;
-            track = track ?? normalizeAngle(deg2rad(5) * Math.round(windDirection / deg2rad(5)));
+        let offTrack = this.fixedOffTrack;
 
-            // Find the transverseOffset that puts the track straight through the circle's center.
-            transverseOffset = circle.x * Math.cos(track) - circle.y * Math.sin(track);
-            transverseOffset = nm2m(0.1) * Math.round(transverseOffset / nm2m(0.1));
+        if (offTrack === undefined) {
+            track ??= normalizeAngle(deg2rad(5) * Math.round(windDirection / deg2rad(5)));
+
+            // Find the offTrack that puts the track straight through the circle's center.
+            offTrack = circle.x * Math.cos(track) - circle.y * Math.sin(track);
+            offTrack = nm2m(0.1) * Math.round(offTrack / nm2m(0.1));
         } else if (track === undefined) {
-            // Find the direction that puts the track straight through the circle's center.
-            track =
-                Math.atan2(circle.x, circle.y) -
-                Math.asin(transverseOffset / Math.sqrt(circle.x ** 2 + circle.y ** 2));
-            track = normalizeAngle(deg2rad(5) * Math.round(track / deg2rad(5)));
+            // TODO: Find the track that maximizes the flight time inside the circle.
+            track = windDirection;
         }
 
-        // Find the longitudinalOffset that puts the exit point right at the edge of the circle.
-        const dx = circle.x - transverseOffset * Math.cos(track);
-        const dy = circle.y + transverseOffset * Math.sin(track);
+        // Find the greenLight distance that puts the exit point right at the edge of the circle.
+        // The forward throw and the 10 seconds delay are added later.
+        const dx = circle.x - offTrack * Math.cos(track);
+        const dy = circle.y + offTrack * Math.sin(track);
         const midJumpRun = dx * Math.sin(track) + dy * Math.cos(track);
         const halfJumpRun = Math.sqrt(midJumpRun ** 2 - dx ** 2 - dy ** 2 + circle.radius ** 2);
-        const longitudinalOffset = midJumpRun - halfJumpRun;
-        if (isNaN(longitudinalOffset)) {
-            throw new Error("The jump run does not intersect the exit circle");
-        }
+        const greenLight = midJumpRun - (Number.isFinite(halfJumpRun) ? halfJumpRun : 0);
 
-        return { track, longitudinalOffset, transverseOffset, jumpRunLength: 2 * halfJumpRun };
+        return { track, greenLight, offTrack, jumpRunLength: 2 * halfJumpRun };
     }
 
-    private calculateRedLight(track: number, longitudinalOffset: number, sog: number) {
+    private calculateRedLight(track: number, greenLight: number, sog: number) {
         return {
             bearing: normalizeAngle(track + Math.PI),
             distance:
-                nm2m(0.1) *
-                Math.round((longitudinalOffset + this.config.redLightTime * sog) / nm2m(0.1)),
+                nm2m(0.1) * Math.round((greenLight + this.config.redLightTime * sog) / nm2m(0.1)),
         };
     }
 
@@ -214,9 +209,9 @@ export const defaultConfig: Config = {
 
 export type Input = {
     winds: Wind[];
-    fixedTrack?: number | undefined;
-    fixedTransverseOffset?: number;
-    allowedLandingDirections?: number[];
+    fixedLineOfFlight?: number | undefined;
+    fixedOffTrack?: number;
+    fixedLandingDirections?: number[];
     config?: Partial<Config>;
 };
 
@@ -234,9 +229,9 @@ type Config = {
 };
 
 type Output = {
-    track: number;
-    longitudinalOffset: number;
-    transverseOffset: number;
+    lineOfFlight: number;
+    greenLight: number;
+    offTrack: number;
     landingDirection: number;
     deplCircle: Circle;
     exitCircle: Circle;
