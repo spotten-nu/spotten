@@ -39,6 +39,20 @@ const dropzones: [Dropzone, ...Dropzone[]] = [
         height: 1000,
         metersPerPixel: 5,
     },
+    {
+        name: "Visby",
+        mapPath: "/maps/visby.png",
+        width: 1438,
+        height: 1000,
+        metersPerPixel: 5,
+    },
+    {
+        name: "Bunge",
+        mapPath: "/maps/bunge.png",
+        width: 1440,
+        height: 996,
+        metersPerPixel: 5,
+    },
 ];
 
 export default dropzones;
